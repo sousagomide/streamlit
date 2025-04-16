@@ -1,38 +1,50 @@
-import altair as alt
-import pandas as pd
 import streamlit as st
-import numpy as np
+import time as t
+import datetime as dt
 
-df = pd.read_excel(
-    io='normal_dist.xlsx',
-    engine='openpyxl',
-    sheet_name='Sheet1',
-    usecols='A:C',
-    nrows=87
+st.set_page_config(
+    page_title='Meu App',
+    layout='wide',
+    initial_sidebar_state='expanded'
 )
 
-st.dataframe(df)
+def mostrarResultado():
+    st.write('Modal:')
+    st.write(varModal)
+    st.write('Cliente: ', varCliente)
+    st.write('Bandeiras: ')
+    st.write(varBanco)
+    st.write('Parcelas: ', varSlider)
+    st.write('Data: ', varData)
 
-histograma = alt.Chart(df).mark_bar().encode(
-    x=alt.X('x', bin=alt.Bin(step=10)),
-    y='sum(count)'
-)
+with st.form('Formulário de seleção de parâmetros'):
+    varModal = st.sidebar.selectbox(
+        'Selecione o modo de transporte:',
+        ('Rodoviário', 'Marítimo', 'Aéreo', 'Trem', 'Outro')
+    )
+
+    with st.sidebar:
+        varCliente = st.radio(
+            'Selecione o cliente:',
+            ('Space X', 'Microsoft', 'Apple', 'IBM')
+        )
+        varBanco = st.multiselect(
+            'Selecione a bandeira:',
+            ['Bradesco', 'Itaú', 'Banco do Brasil', 'Caixa Econômica', 'Santander']
+        )
+        varSlider = st.slider(
+            'Quantas parcelas deseja financiar?', 0, 60, 30
+        )
+        varData = st.date_input(
+            'Selecione a data do vencimento:',
+            dt.date.today()
+        )
+        botao_form = st.form_submit_button('Filtrar')
+
+if botao_form:
+    st.success('Obrigado por filtrar os dados.')
+    mostrarResultado()
 
 
-mu = df['x'].mean()
-sigma = df['x'].std()
-# Gerar pontos para a curva gaussiana
-x_vals = np.linspace(df['x'].min(), df['x'].max(), 200)
-y_vals = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_vals - mu) / sigma) ** 2)
-# Normalizar a curva para escalar com o histograma
-scale_factor = df['count'].sum() * 10  # step do bin = 10
-y_vals_scaled = y_vals * scale_factor
-gauss_df = pd.DataFrame({'x': x_vals, 'gauss': y_vals_scaled})
-# Criar a curva gaussiana
-linha_gauss = alt.Chart(gauss_df).mark_line(color='red', strokeWidth=2).encode(
-    x='x',
-    y='gauss'
-)
-
-st.subheader('Histograma')
-st.altair_chart(histograma+linha_gauss, use_container_width=True)
+    
+    
